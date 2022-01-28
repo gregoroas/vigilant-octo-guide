@@ -1,26 +1,59 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-    steps:
-      - checkout
-      - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+executors:
+  ubuntu1404:
+    machine:
+      image: circleci/classic:latest
+  ubuntu1604:
+    machine:
+      image: ubuntu-1604:201903-01
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+commands:
+  docker_build_debian10:
+    steps:
+      - run: docker build -t vagrant:debian10 https://github.com/leighmcculloch/vagrant-docker-image.git#:debian10
+      - run: docker tag vagrant:debian10 vagrant:latest
+  docker_build_centos7:
+    steps:
+      - run: docker build -t vagrant:centos7 https://github.com/leighmcculloch/vagrant-docker-image.git#:centos7
+      - run: docker tag vagrant:centos7 vagrant:latest
+  test:
+    steps:
+      - run: bundle install --path vendor/bundle
+      - run: bundle exec vagrant up
+      - run: bundle exec vagrant ssh -c 'lscpu && docker run'
+
+jobs:
+  pc1:
+    executor: ubuntu1404
+    steps:
+      - docker_build_debian10
+      - checkout
+      - test
+  pc2:
+    executor: ubuntu1404
+    steps:
+      - docker_build_centos7
+      - checkout
+      - test
+  pc3:
+    executor: ubuntu1604
+    steps:
+      - docker_build_debian10
+      - checkout
+      - test
+  pc4:
+    executor: ubuntu1604
+    steps:
+      - docker_build_centos7
+      - checkout
+      - test
+
 workflows:
-  say-hello-workflow:
+  version: 2
+  test:
     jobs:
-      - say-hello
+      - pc1
+      - pc2
+      - pc3
+      - pc4
