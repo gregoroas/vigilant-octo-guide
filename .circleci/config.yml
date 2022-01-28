@@ -21,28 +21,28 @@ commands:
     steps:
       - run: bundle install --path vendor/bundle
       - run: bundle exec vagrant up
-      - run: bundle exec vagrant ssh -c 'lscpu && docker run'
+      - run: bundle exec vagrant ssh -c 'docker-compose --version'
 
 jobs:
-  pc1:
+  host_ubuntu1404_guest_debian10:
     executor: ubuntu1404
     steps:
       - docker_build_debian10
       - checkout
       - test
-  pc2:
+  host_ubuntu1404_guest_centos7:
     executor: ubuntu1404
     steps:
       - docker_build_centos7
       - checkout
       - test
-  pc3:
+  host_ubuntu1604_guest_debian10:
     executor: ubuntu1604
     steps:
       - docker_build_debian10
       - checkout
       - test
-  pc4:
+  host_ubuntu1604_guest_centos7:
     executor: ubuntu1604
     steps:
       - docker_build_centos7
@@ -53,7 +53,7 @@ workflows:
   version: 2
   test:
     jobs:
-      - pc1
-      - pc2
-      - pc3
-      - pc4
+      - host_ubuntu1404_guest_debian10
+      - host_ubuntu1404_guest_centos7
+      - host_ubuntu1604_guest_debian10
+      - host_ubuntu1604_guest_centos7
